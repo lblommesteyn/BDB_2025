@@ -1,0 +1,16 @@
+# Ignore large competition data
+analytics/data/*
+!analytics/data/
+!analytics/data/README.md
+prediction/data/*
+!prediction/data/
+!prediction/data/README.md
+# Ignore raw competition zip downloads
+analytics/nfl-big-data-bowl-2026-analytics.zip
+prediction/nfl-big-data-bowl-2026-prediction.zip
+# Ignore generated artifacts
+analytics/outputs/
+# Ignore Python caches
+__pycache__/
+*.pyc
+
