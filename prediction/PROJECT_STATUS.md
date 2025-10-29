@@ -76,6 +76,12 @@
 - Report ADE/FDE overall, by air-time bins (<1.0s, 1.0–2.0s, >2.0s), and by role.
 - Kinematic sanity: fraction of frames exceeding $v_{\max} = 10\,\text{m/s}$ and $a_{\max} = 7\,\text{m/s}^2$ (target <0.5%).
 - Drift diagnostics: plot per-frame error curves; rising tail implies need for jerk penalties or chunked decoding.
+- Pairwise model comparison: for models $A$ and $B$, compute per-play differences $d_i = \text{ADE}_i^{(A)} - \text{ADE}_i^{(B)}$ (similarly for FDE), then evaluate
+  $$
+  t = \frac{\bar{d}}{s_d / \sqrt{n}}, \qquad d = \frac{\bar{d}}{s_d},
+  $$
+  where $t$ is the paired $t$-statistic and $d$ is Cohen’s effect size. Prefer the candidate if $|t|$ exceeds the critical value (e.g., $p < 0.05$) and $|d| \ge 0.3$, signaling a meaningful improvement.
+- Calibration versus physical priors: compare distributions of $\|\hat{\mathbf{v}}\|$ and $\|\hat{\mathbf{a}}\|$ across models; reject models whose empirical violation rate exceeds the 0.5% target even if ADE is lower.
 
 ## 8. Inference Tricks
 - Decode in two chunks (first half, re-seed state, second half) to limit drift.
@@ -90,12 +96,12 @@
 - Optionally fit a linear blender on validation predictions for stacked ensembling.
 
 ## 10. Engineering Checklist
-- [ ] Data loaders that emit normalized + raw coords, masks, and graph edge indices.
-- [ ] Pre-training pipeline (SSL + physics imitation) with checkpoint export as Kaggle dataset.
-- [ ] Fine-tuning script/notebook with configurable batch size, horizon length, and augmentation toggles.
-- [ ] Evaluation notebook generating ADE/FDE breakdowns and kinematic sanity charts.
+- [ ] Data loader emits normalized/raw coords, masks, and graph edges.
+- [ ] Pre-training pipeline (SSL + physics imitation) with checkpoint export.
+- [ ] Fine-tuning script with configurable batch size, horizon length, and augmentations.
+- [ ] Evaluation notebook producing ADE/FDE breakdowns and kinematic sanity charts.
 - [ ] Inference script supporting chunked decoding, smoothing, and ensemble averaging.
-- [ ] Submission packaging: Kaggle dataset for weights, inference notebook under 9-hour limit, documented environment.
+- [ ] Submission packaging: weights as Kaggle dataset + inference notebook under time limit.
 
 ## 11. Expected Performance Targets (yards)
 - PR-GT from scratch: ADE ≈ 1.0, FDE ≈ 1.8.
@@ -103,7 +109,7 @@
 - Three-model ensemble: ADE 0.75–0.90, FDE 1.2–1.6.
 
 ## 12. Sanity Tests
-- Coordinate transforms: field → normalized → field round-trip error < $10^{-3}$ yards.
+- Coordinate transform round-trip error < $10^{-3}$ yards.
 - Loss masking: zero contribution for frames beyond $T$.
-- Split integrity: no overlapping games between train/val/test.
-- Augmentation safety: mirrored/rotated plays remain in bounds and preserve team orientation.
+- Split integrity: no overlapping games across splits.
+- Augmentation safety: mirrored/rotated plays remain in bounds and preserve orientation.
