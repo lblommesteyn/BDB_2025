@@ -161,7 +161,8 @@
 2. **Outcome probability calibration dataset (P1)**  
    - Add a `collect_outcome_training_set()` helper in `dacs_one_game.py` (or a new `features/outcome_dataset.py`) that reads existing play JSON under `outputs/dacs/`, extracts the event probability triplets, and joins realized results from `supplementary_data.csv`.  
    - Split into train/validation folds and persist to `analytics/data/outcome_training.parquet`; document feature columns in this file.  
-   - Definition of done: dataset saved with schema + README snippet, ready for modeling in `residual_model.py` or a sibling file.
+   - Definition of done: dataset saved with schema + README snippet, ready for modeling in `residual_model.py` or a sibling file.  
+   - _Status 2025-11-14_: Implemented `analytics/features/outcome_dataset.py` (CLI + helper package) and produced the first `analytics/data/outcome_training.parquet` (58 plays from `outputs/dacs_batch`). README documents build command. Next: plug this dataset into an actual calibrated outcome model.
 3. **Uncertainty sampling hook (P2)**  
    - Wire `ResidualReachModel.sample_scales` into `compute_dacs_for_game` behind a flag (`--n_uncertainty_samples`), producing high/low quantiles plus defender-level variance stored inside each play JSON.  
    - Extend the CSV summary writer to emit `dacs_final_lo/hi` columns (placeholders already exist, but currently mirror the mean).  
