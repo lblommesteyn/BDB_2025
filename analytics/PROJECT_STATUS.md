@@ -143,7 +143,7 @@
    - Provide reproducibility instructions (environment setup, CLI commands) for submission.
 
 ## 9. Ready-for-Submission Checklist
-- [ ] Batch pipeline produces season-level tables and manifest.
+- [x] Batch pipeline produces season-level tables and manifest. _(2025-11-14: `analytics/batch_runner.py` validated on full game; manifests + season parquet confirmed.)_
 - [ ] Outcome model calibrated, evaluated, and integrated.
 - [ ] Uncertainty bands present in JSON/CSV/GIF outputs.
 - [ ] Residual model experiments documented with validation metrics.
