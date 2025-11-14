@@ -125,18 +125,22 @@
    - Collect historical coverage metrics and pass outcomes from existing outputs.
    - Train/validate a classifier or probabilistic regressor; save to `analytics/models/outcome_model.joblib`.
    - Swap the heuristic block in `dacs_time_series` for model inference and log calibration metrics.
+   - _Status 2025-11-14_: Built `analytics/features/outcome_dataset.py`, produced `analytics/data/outcome_training.parquet`, and created `analytics/notebooks/outcome_model_calibration.ipynb` to train/evaluate multinomial logistic baselines before integrating them.
 3. **Uncertainty propagation**
    - Draw multiple reach samples per defender/time step; compute means and quantiles.
    - Extend JSON/CSV schema to include interval columns; update GIFs with shaded ribbons.
 4. **Residual model R&D**
    - Augment sample collection with fold IDs, run cross-validation, and report loss/MAE.
    - Prototype alternate models in `analytics/models/experiments/` and document improvements.
+   - _Status 2025-11-14_: Notebook `analytics/notebooks/residual_model_rnd.ipynb` seeds the workflow (sample extraction, MLP baseline, diagnostics) to iterate quickly.
 5. **Physics calibration**
    - Analyze tracking data to infer realistic caps per position/coverage type.
    - Update defaults or add lookup tables; re-run validation plays to confirm behavior.
+   - _Status 2025-11-14_: Notebook `analytics/notebooks/physics_calibration.ipynb` loads sample frames, computes per-position quantiles, and visualizes distributions for cap tuning.
 6. **Visualization refresh**
    - Modularize overlays in `visualize_dacs.make_animation`.
    - Produce curated highlight packages and integrate uncertainty visuals.
+   - _Status 2025-11-14_: Notebook `analytics/notebooks/visual_storytelling.ipynb` explores DACS bands, Player Share charts, and comparison layouts for future GIF upgrades.
 7. **Documentation and submission**
    - Write methodology + results summary.
    - Build dashboards (e.g., Streamlit) over season aggregates.
