@@ -136,7 +136,7 @@ def collect_records(outputs_dir: str, pattern: str) -> List[Dict]:
     for path in _iter_play_jsons(glob_expr):
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        event_probs = data.get("event_probabilities")
+        event_probs = data.get("event_probabilities_prior") or data.get("event_probabilities")
         if not event_probs:
             continue
         rec = {

@@ -109,6 +109,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable residual reach corrections.",
     )
+    parser.add_argument(
+        "--outcome-model-path",
+        default=None,
+        help="Path to a calibrated outcome model checkpoint.",
+    )
+    parser.add_argument(
+        "--no-outcome-model",
+        action="store_true",
+        help="Disable outcome model calibration (fallback to heuristics).",
+    )
     return parser.parse_args()
 
 
@@ -222,6 +232,10 @@ def main() -> int:
             compute_kwargs["residual_model_path"] = args.residual_model_path
         if args.no_residual_model:
             compute_kwargs["use_residual_model"] = False
+        if args.outcome_model_path is not None:
+            compute_kwargs["outcome_model_path"] = args.outcome_model_path
+        if args.no_outcome_model:
+            compute_kwargs["use_outcome_model"] = False
 
         status = "success"
         error_msg = None

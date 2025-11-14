@@ -125,7 +125,7 @@
    - Collect historical coverage metrics and pass outcomes from existing outputs.
    - Train/validate a classifier or probabilistic regressor; save to `analytics/models/outcome_model.joblib`.
    - Swap the heuristic block in `dacs_time_series` for model inference and log calibration metrics.
-   - _Status 2025-11-14_: Built `analytics/features/outcome_dataset.py`, produced `analytics/data/outcome_training.parquet`, and created `analytics/notebooks/outcome_model_calibration.ipynb` to train/evaluate multinomial logistic baselines before integrating them.
+   - _Status 2025-11-14_: Dataset builder now ingests `analytics/outputs/dacs_batch/` (242 plays so far), `analytics/outcome_model.py` trains a multinomial logistic baseline (train log loss 0.97 / val 1.16) saved to `analytics/models/outcome_model.joblib`, and `dacs_one_game` records heuristic priors plus calibrated probabilities per play.
 3. **Uncertainty propagation**
    - Draw multiple reach samples per defender/time step; compute means and quantiles.
    - Extend JSON/CSV schema to include interval columns; update GIFs with shaded ribbons.
@@ -148,7 +148,7 @@
 
 ## 9. Ready-for-Submission Checklist
 - [x] Batch pipeline produces season-level tables and manifest. _(2025-11-14: `analytics/batch_runner.py` validated on full game; manifests + season parquet confirmed.)_
-- [ ] Outcome model calibrated, evaluated, and integrated.
+- [x] Outcome model calibrated, evaluated, and integrated. _(Logistic baseline trained via `analytics/outcome_model.py`, joblib saved, and `dacs_one_game` now consumes calibrated probabilities while retaining heuristic priors for analysis.)_
 - [ ] Uncertainty bands present in JSON/CSV/GIF outputs.
 - [ ] Residual model experiments documented with validation metrics.
 - [ ] Physics parameters tuned from data (with supporting analysis).
@@ -163,10 +163,10 @@
    - Definition of done: running on the Week 1 subset finishes without manual intervention and writes manifest + Parquet.  
    - _Status 2025-11-14_: Validated CLI via `python analytics/batch_runner.py --games 2023090700 --limit 1 --out analytics/outputs/dacs_batch --manifest analytics/outputs/batch_runner/test_manifest.jsonl --season-summary analytics/outputs/batch_runner/test_season.parquet`; run processed 58 plays, wrote JSONL manifest + Parquet summary (see `analytics/outputs/batch_runner/`). Next: scale to entire Week 1 and integrate into automation scripts.
 2. **Outcome probability calibration dataset (P1)**  
-   - Add a `collect_outcome_training_set()` helper in `dacs_one_game.py` (or a new `features/outcome_dataset.py`) that reads existing play JSON under `outputs/dacs/`, extracts the event probability triplets, and joins realized results from `supplementary_data.csv`.  
-   - Split into train/validation folds and persist to `analytics/data/outcome_training.parquet`; document feature columns in this file.  
-   - Definition of done: dataset saved with schema + README snippet, ready for modeling in `residual_model.py` or a sibling file.  
-   - _Status 2025-11-14_: Implemented `analytics/features/outcome_dataset.py` (CLI + helper package) and produced the first `analytics/data/outcome_training.parquet` (58 plays from `outputs/dacs_batch`). README documents build command. Next: plug this dataset into an actual calibrated outcome model.
+    - Add a `collect_outcome_training_set()` helper in `dacs_one_game.py` (or a new `features/outcome_dataset.py`) that reads existing play JSON under `outputs/dacs/`, extracts the event probability triplets, and joins realized results from `supplementary_data.csv`.  
+    - Split into train/validation folds and persist to `analytics/data/outcome_training.parquet`; document feature columns in this file.  
+    - Definition of done: dataset saved with schema + README snippet, ready for modeling in `residual_model.py` or a sibling file.  
+   - _Status 2025-11-14_: CLI now rebuilds datasets from the expanding `analytics/outputs/dacs_batch/` cache (242 plays across 4 games), `analytics/outcome_model.py` trains/saves a multinomial logistic baseline, and `dacs_one_game` replaces heuristics with calibrated predictions while still logging priors. Next: scale to all games + improve class balance (interceptions) in the model.
 3. **Uncertainty sampling hook (P2)**  
    - Wire `ResidualReachModel.sample_scales` into `compute_dacs_for_game` behind a flag (`--n_uncertainty_samples`), producing high/low quantiles plus defender-level variance stored inside each play JSON.  
    - Extend the CSV summary writer to emit `dacs_final_lo/hi` columns (placeholders already exist, but currently mirror the mean).  
