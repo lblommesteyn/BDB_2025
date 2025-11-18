@@ -20,6 +20,15 @@ from analytics.residual_model import (
     build_feature_vector,
     load_residual_model,
 )
+<<<<<<< HEAD
+=======
+from analytics.outcome_model import (
+    OutcomeModelBundle,
+    feature_vector_from_play,
+    load_outcome_model,
+    predict_event_probs,
+)
+>>>>>>> feature/batch-runner-season
 
 # -----------------------------
 # Constants and calibration
@@ -103,9 +112,29 @@ class PlaySnapshot:
 # -----------------------------
 
 def load_calibration(root_dir: str) -> Tuple[float, float]:
+<<<<<<< HEAD
     """Load a_max and v_cap from eda_summary.json if available."""
     fp = os.path.join(root_dir, 'eda_summary.json')
     a_max, v_cap = DEFAULT_A_MAX, DEFAULT_V_CAP
+=======
+    """Load a_max and v_cap from physics_caps.json or eda_summary.json if available."""
+    caps_path = os.path.join(root_dir, 'analytics', 'data', 'physics_caps.json')
+    a_max, v_cap = DEFAULT_A_MAX, DEFAULT_V_CAP
+    if os.path.exists(caps_path):
+        try:
+            with open(caps_path, 'r', encoding='utf-8') as f:
+                caps = json.load(f).get('recommended_caps', {})
+            default_caps = caps.get('default')
+            if default_caps:
+                v_cap = float(default_caps.get('v_cap', v_cap))
+                a_max = float(default_caps.get('a_max', a_max))
+        except Exception:
+            pass
+    if (a_max, v_cap) != (DEFAULT_A_MAX, DEFAULT_V_CAP):
+        return a_max, v_cap
+
+    fp = os.path.join(root_dir, 'eda_summary.json')
+>>>>>>> feature/batch-runner-season
     if os.path.exists(fp):
         try:
             with open(fp, 'r', encoding='utf-8') as f:
@@ -361,11 +390,20 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
                      topk_ps: int = PLAYER_SHARE_TOPK,
                      seed: int = 42,
                      residual_model: Optional[ResidualReachModel] = None,
+<<<<<<< HEAD
+=======
+                     uncertainty_samples: int = 0,
+>>>>>>> feature/batch-runner-season
                      play_output: Optional[pd.DataFrame] = None,
                      supplementary_row: Optional[Any] = None,
                      baseline_epa_map: Optional[Dict[Tuple[str, str], float]] = None,
                      baseline_epa_default: float = 0.0,
+<<<<<<< HEAD
                      event_epa_map: Optional[Dict[str, float]] = None) -> Dict:
+=======
+                     event_epa_map: Optional[Dict[str, float]] = None,
+                     outcome_model: Optional[OutcomeModelBundle] = None) -> Dict:
+>>>>>>> feature/batch-runner-season
     rng = np.random.default_rng(seed)
 
     qb = np.array(snap.qb_pos, dtype=float)
@@ -390,6 +428,10 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
 
     residual_std = None
     clip_min, clip_max = 0.0, 3.0
+<<<<<<< HEAD
+=======
+    do_uncertainty = bool(residual_model is not None and uncertainty_samples and uncertainty_samples > 0)
+>>>>>>> feature/batch-runner-season
     if residual_model is not None:
         residual_std = np.asarray(residual_model.target_stats.get('resid_std', np.zeros(2)), dtype=float)
         clip_min, clip_max = residual_model.clip_bounds
@@ -533,6 +575,10 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
 
     # Main loop for DACS
     corridor_centers: List[Tuple[float,float]] = []
+<<<<<<< HEAD
+=======
+    mc_dacs_samples = np.zeros((uncertainty_samples, steps), dtype=float) if do_uncertainty else None
+>>>>>>> feature/batch-runner-season
     for k, t in enumerate(times, start=1):
         alpha = float(k) / float(steps)
         center = qb + alpha * vec  # straight-line interpolation
@@ -561,7 +607,11 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
             scales = residual_model.predict_scales(feat_mat)
             long_scale = scales[:, 0]
             lat_scale = scales[:, 1]
+<<<<<<< HEAD
             if residual_std is not None:
+=======
+            if residual_std is not None and not do_uncertainty:
+>>>>>>> feature/batch-runner-season
                 long_scale_low = np.clip(long_scale - residual_std[0], clip_min, clip_max)
                 long_scale_high = np.clip(long_scale + residual_std[0], clip_min, clip_max)
                 lat_scale_low = np.clip(lat_scale - residual_std[1], clip_min, clip_max)
@@ -610,7 +660,25 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         dacs = dacs_frac * 100.0
         dacs_frac_vals.append(dacs_frac)
         dacs_vals.append(dacs)
+<<<<<<< HEAD
         if residual_model is not None:
+=======
+        if do_uncertainty and residual_model is not None and D > 0:
+            sample_scales = residual_model.sample_scales(feat_mat, uncertainty_samples, rng=rng)
+            long_samples = sample_scales[:, :, 0]
+            lat_samples = sample_scales[:, :, 1]
+            a_axes_samples = np.maximum(base_a_axis[None, :] * long_samples, 1e-6)
+            b_axes_samples = np.maximum(base_b_axis[None, :] * lat_samples, 1e-6)
+            x_exp = xprime[None, :, :]
+            y_exp = yprime[None, :, :]
+            inside_samples = (x_exp / a_axes_samples[:, :, None]) ** 2 + (y_exp / b_axes_samples[:, :, None]) ** 2 <= 1.0
+            cover_samples = inside_samples.any(axis=1)
+            sample_dacs = cover_samples.mean(axis=1) * 100.0
+            mc_dacs_samples[:, k-1] = sample_dacs
+            dacs_low_vals.append(float(np.percentile(sample_dacs, 5)))
+            dacs_high_vals.append(float(np.percentile(sample_dacs, 95)))
+        elif residual_model is not None:
+>>>>>>> feature/batch-runner-season
             covered_low = inside_low.any(axis=0)
             covered_high = inside_high.any(axis=0)
             dacs_low_vals.append(float(covered_low.mean()) * 100.0)
@@ -707,6 +775,39 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         probs /= total_prob
     p_catch, p_drop, p_int = probs.tolist()
     dvi = float(np.var(probs))
+<<<<<<< HEAD
+=======
+    heuristic_probs = {
+        'catch': float(p_catch),
+        'incomplete': float(p_drop),
+        'interception': float(p_int),
+    }
+
+    feature_payload = {
+        'n_defenders': len(snap.defenders),
+        'corridor_length': float(L),
+        'num_frames_output': int(snap.num_frames_output),
+        'dacs_final': dacs_final,
+        'dacs_final_lo': dacs_final_lo,
+        'dacs_final_hi': dacs_final_hi,
+        'coverage_intensity': coverage_intensity,
+        'dvi': dvi,
+        'bfoi': bfoi,
+    }
+
+    event_probabilities = heuristic_probs.copy()
+    if outcome_model is not None:
+        try:
+            feature_vec = feature_vector_from_play(outcome_model.features, feature_payload, heuristic_probs)
+            cal_probs = predict_event_probs(outcome_model, feature_vec)
+            if cal_probs:
+                event_probabilities = cal_probs
+                p_catch = event_probabilities['catch']
+                p_drop = event_probabilities['incomplete']
+                p_int = event_probabilities['interception']
+        except Exception as exc:  # noqa: BLE001
+            print(f"[WARN] Outcome model inference failed: {exc}")
+>>>>>>> feature/batch-runner-season
 
     event_epa_map = event_epa_map or {}
     epa_catch = float(event_epa_map.get('C', baseline_epa_default))
@@ -717,15 +818,37 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
     pass_length_val = ''
     pass_loc_val = ''
     pass_result_val = ''
+<<<<<<< HEAD
+=======
+    route_val = ''
+    dropback_type_val = ''
+    dropback_distance_val = ''
+    coverage_type_val = ''
+    coverage_man_zone_val = ''
+    expected_epa_val = math.nan
+>>>>>>> feature/batch-runner-season
     baseline_epa = baseline_epa_default
     actual_epa = baseline_epa_default
     if supplementary_row is not None:
         pass_length_val = str(getattr(supplementary_row, 'pass_length', '') or '')
         pass_loc_val = str(getattr(supplementary_row, 'pass_location_type', '') or '')
+<<<<<<< HEAD
         key = (pass_length_val, pass_loc_val)
         if baseline_epa_map is not None:
             baseline_epa = float(baseline_epa_map.get(key, baseline_epa_default))
         actual_epa_val = getattr(supplementary_row, 'expected_points_added', baseline_epa)
+=======
+        route_val = str(getattr(supplementary_row, 'route_of_targeted_receiver', '') or '')
+        dropback_type_val = str(getattr(supplementary_row, 'dropback_type', '') or '')
+        dropback_distance_val = getattr(supplementary_row, 'dropback_distance', math.nan)
+        coverage_type_val = str(getattr(supplementary_row, 'team_coverage_type', '') or '')
+        coverage_man_zone_val = str(getattr(supplementary_row, 'team_coverage_man_zone', '') or '')
+        expected_epa_val = getattr(supplementary_row, 'expected_points_added', math.nan)
+        key = (pass_length_val, pass_loc_val)
+        if baseline_epa_map is not None:
+            baseline_epa = float(baseline_epa_map.get(key, baseline_epa_default))
+        actual_epa_val = expected_epa_val if not math.isnan(expected_epa_val) else baseline_epa
+>>>>>>> feature/batch-runner-season
         try:
             actual_epa = float(actual_epa_val)
         except (TypeError, ValueError):
@@ -733,6 +856,25 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         if math.isnan(actual_epa):
             actual_epa = baseline_epa
         pass_result_val = str(getattr(supplementary_row, 'pass_result', ''))
+<<<<<<< HEAD
+=======
+    # Add supplementary-driven fields into payload for outcome model
+    def _to_float(val):
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return math.nan
+    feature_payload.update({
+        'pass_length': _to_float(pass_length_val),
+        'pass_location_type': pass_loc_val,
+        'route_of_targeted_receiver': route_val,
+        'dropback_type': dropback_type_val,
+        'dropback_distance': _to_float(dropback_distance_val),
+        'team_coverage_type': coverage_type_val,
+        'team_coverage_man_zone': coverage_man_zone_val,
+        'expected_points_added': _to_float(expected_epa_val),
+    })
+>>>>>>> feature/batch-runner-season
 
     eaepa_model = float(baseline_epa - expected_epa_cov)
     eaepa_realized = float(baseline_epa - actual_epa)
@@ -803,6 +945,10 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         'dacs_final_lo': dacs_final_lo,
         'dacs_final_hi': dacs_final_hi,
         'coverage_intensity': coverage_intensity,
+<<<<<<< HEAD
+=======
+        'event_probabilities_prior': heuristic_probs,
+>>>>>>> feature/batch-runner-season
         'event_probabilities': event_probabilities,
         'baseline_epa': baseline_epa,
         'expected_epa_coverage': expected_epa_cov,
@@ -820,6 +966,15 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
             'corridor_radius': float(corridor_radius),
         }
     }
+<<<<<<< HEAD
+=======
+    if do_uncertainty and mc_dacs_samples is not None:
+        out['uncertainty'] = {
+            'n_samples': int(uncertainty_samples),
+            'dacs_series_p05': dacs_low_vals,
+            'dacs_series_p95': dacs_high_vals,
+        }
+>>>>>>> feature/batch-runner-season
     return out
 
 
@@ -828,12 +983,24 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
 # -----------------------------
 
 def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
+<<<<<<< HEAD
                            samples_per_t: int = SAMPLES_PER_T,
                            corridor_radius: float = CORRIDOR_RADIUS_YDS,
                            topk_ps: int = PLAYER_SHARE_TOPK,
                            seed: int = 42,
                            residual_model_path: Optional[str] = None,
                            use_residual_model: bool = True) -> Tuple[pd.DataFrame, List[str]]:
+=======
+                          samples_per_t: int = SAMPLES_PER_T,
+                          corridor_radius: float = CORRIDOR_RADIUS_YDS,
+                          topk_ps: int = PLAYER_SHARE_TOPK,
+                          seed: int = 42,
+                          residual_model_path: Optional[str] = None,
+                          use_residual_model: bool = True,
+                          uncertainty_samples: int = 0,
+                          outcome_model_path: Optional[str] = None,
+                          use_outcome_model: bool = True) -> Tuple[pd.DataFrame, List[str]]:
+>>>>>>> feature/batch-runner-season
     a_max, v_cap = load_calibration(root_dir)
     files = analytics_input_files(root_dir)
     output_files = analytics_output_files(root_dir)
@@ -877,17 +1044,41 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
         if residual_model is None:
             print(f"[WARN] Residual model not found at {model_path}; using physics-only reach.")
 
+<<<<<<< HEAD
+=======
+    outcome_model_bundle: Optional[OutcomeModelBundle] = None
+    if use_outcome_model:
+        outcome_path = outcome_model_path or os.path.join(root_dir, 'analytics', 'models', 'outcome_model.joblib')
+        if os.path.exists(outcome_path):
+            try:
+                outcome_model_bundle = load_outcome_model(outcome_path)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[WARN] Failed to load outcome model at {outcome_path}: {exc}")
+        else:
+            print(f"[INFO] Outcome model not found at {outcome_path}; heuristics will be used.")
+
+>>>>>>> feature/batch-runner-season
     for snap in snapshots:
         play_output = outputs_by_play.get(snap.play_id)
         supp_row = supp_lookup.get(snap.play_id)
         result = dacs_time_series(
             snap, a_max=a_max, v_cap=v_cap, dt=DT,
             samples_per_t=samples_per_t, corridor_radius=corridor_radius,
+<<<<<<< HEAD
             topk_ps=topk_ps, seed=seed, residual_model=residual_model, play_output=play_output,
+=======
+            topk_ps=topk_ps, seed=seed, residual_model=residual_model,
+            uncertainty_samples=uncertainty_samples,
+            play_output=play_output,
+>>>>>>> feature/batch-runner-season
             supplementary_row=supp_row,
             baseline_epa_map=baseline_epa_map,
             baseline_epa_default=baseline_epa_default,
             event_epa_map=event_epa_map,
+<<<<<<< HEAD
+=======
+            outcome_model=outcome_model_bundle,
+>>>>>>> feature/batch-runner-season
         )
 
         # Save per-play JSON

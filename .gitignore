@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ignore large competition data
 analytics/data/*
 !analytics/data/
@@ -14,3 +15,7 @@ analytics/outputs/
 __pycache__/
 *.pyc
 
+=======
+analytics/nfl-big-data-bowl-2026-analytics.zip
+prediction/nfl-big-data-bowl-2026-prediction.zip
+>>>>>>> feature/batch-runner-season
