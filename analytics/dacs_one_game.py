@@ -20,15 +20,21 @@ from analytics.residual_model import (
     build_feature_vector,
     load_residual_model,
 )
-<<<<<<< HEAD
-=======
-from analytics.outcome_model import (
-    OutcomeModelBundle,
-    feature_vector_from_play,
-    load_outcome_model,
-    predict_event_probs,
-)
->>>>>>> feature/batch-runner-season
+try:
+    from analytics.outcome_model import (
+        OutcomeModelBundle,
+        load_outcome_model,
+        predict_event_probs,
+        build_feature_vector_from_payload,
+    )
+
+    HAS_OUTCOME_MODEL_SUPPORT = True
+except Exception:  # noqa: BLE001
+    OutcomeModelBundle = Any  # type: ignore[assignment]
+    build_feature_vector_from_payload = None
+    load_outcome_model = None
+    predict_event_probs = None
+    HAS_OUTCOME_MODEL_SUPPORT = False
 
 # -----------------------------
 # Constants and calibration
@@ -112,11 +118,6 @@ class PlaySnapshot:
 # -----------------------------
 
 def load_calibration(root_dir: str) -> Tuple[float, float]:
-<<<<<<< HEAD
-    """Load a_max and v_cap from eda_summary.json if available."""
-    fp = os.path.join(root_dir, 'eda_summary.json')
-    a_max, v_cap = DEFAULT_A_MAX, DEFAULT_V_CAP
-=======
     """Load a_max and v_cap from physics_caps.json or eda_summary.json if available."""
     caps_path = os.path.join(root_dir, 'analytics', 'data', 'physics_caps.json')
     a_max, v_cap = DEFAULT_A_MAX, DEFAULT_V_CAP
@@ -134,7 +135,6 @@ def load_calibration(root_dir: str) -> Tuple[float, float]:
         return a_max, v_cap
 
     fp = os.path.join(root_dir, 'eda_summary.json')
->>>>>>> feature/batch-runner-season
     if os.path.exists(fp):
         try:
             with open(fp, 'r', encoding='utf-8') as f:
@@ -384,26 +384,26 @@ def sample_points_in_disk(center: np.ndarray, radius: float, n: int, rng: np.ran
     return np.stack([x, y], axis=1)
 
 
-def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
-                     dt: float = DT, samples_per_t: int = SAMPLES_PER_T,
-                     corridor_radius: float = CORRIDOR_RADIUS_YDS,
-                     topk_ps: int = PLAYER_SHARE_TOPK,
-                     seed: int = 42,
-                     residual_model: Optional[ResidualReachModel] = None,
-<<<<<<< HEAD
-=======
-                     uncertainty_samples: int = 0,
->>>>>>> feature/batch-runner-season
-                     play_output: Optional[pd.DataFrame] = None,
-                     supplementary_row: Optional[Any] = None,
-                     baseline_epa_map: Optional[Dict[Tuple[str, str], float]] = None,
-                     baseline_epa_default: float = 0.0,
-<<<<<<< HEAD
-                     event_epa_map: Optional[Dict[str, float]] = None) -> Dict:
-=======
-                     event_epa_map: Optional[Dict[str, float]] = None,
-                     outcome_model: Optional[OutcomeModelBundle] = None) -> Dict:
->>>>>>> feature/batch-runner-season
+def dacs_time_series(
+    snap: PlaySnapshot,
+    a_max: float,
+    v_cap: float,
+    dt: float = DT,
+    samples_per_t: int = SAMPLES_PER_T,
+    corridor_radius: float = CORRIDOR_RADIUS_YDS,
+    topk_ps: int = PLAYER_SHARE_TOPK,
+    seed: int = 42,
+    residual_model: Optional[ResidualReachModel] = None,
+    uncertainty_samples: int = 0,
+    play_output: Optional[pd.DataFrame] = None,
+    supplementary_row: Optional[Any] = None,
+    baseline_epa_map: Optional[Dict[Tuple[str, str], float]] = None,
+    baseline_epa_default: float = 0.0,
+    event_epa_map: Optional[Dict[str, float]] = None,
+    outcome_model: Optional[OutcomeModelBundle] = None,
+    use_ball_flight_heuristic: bool = True,
+    ball_speed_yds_per_s: float = 26.0,
+) -> Dict:
     rng = np.random.default_rng(seed)
 
     qb = np.array(snap.qb_pos, dtype=float)
@@ -413,7 +413,37 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
     L = float(np.linalg.norm(vec)) + 1e-9
 
     # times and centers along straight-line ball path
-    steps = int(np.clip(snap.num_frames_output, 1, MAX_STEPS_CAP))
+    steps_raw = int(np.clip(snap.num_frames_output, 1, MAX_STEPS_CAP))
+    steps = steps_raw
+    pass_len_val: Optional[float] = None
+    if supplementary_row is not None:
+        try:
+            pass_len_val = float(str(getattr(supplementary_row, "pass_length", "") or "").strip())
+        except Exception:
+            pass_len_val = None
+    # Heuristic: adjust ball flight steps based on pass length and assumed ball speed; add release offset and radius scaling
+    rel_offset = 0
+    radius_scale = 1.0
+    if pass_len_val is not None:
+        if pass_len_val > 30:
+            radius_scale = 1.6
+            rel_offset = 3
+        elif pass_len_val > 20:
+            radius_scale = 1.35
+            rel_offset = 2
+        elif pass_len_val > 10:
+            radius_scale = 1.15
+            rel_offset = 1
+        else:
+            rel_offset = 1
+    radius_used = float(corridor_radius * radius_scale)
+    if use_ball_flight_heuristic:
+        speed = float(max(1e-3, ball_speed_yds_per_s))
+        air_time = float(max(0.3, L / speed))
+        steps_flight = int(np.clip(math.ceil(air_time / dt), 1, MAX_STEPS_CAP))
+        steps = max(1, min(MAX_STEPS_CAP, min(steps_raw, steps_flight + rel_offset)))
+    times = np.arange(1, steps + 1, dtype=float) * dt
+    total_time = times[-1] if times.size > 0 else 0.0
     times = np.arange(1, steps + 1, dtype=float) * dt
     total_time = times[-1] if times.size > 0 else 0.0
 
@@ -428,10 +458,9 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
 
     residual_std = None
     clip_min, clip_max = 0.0, 3.0
-<<<<<<< HEAD
-=======
-    do_uncertainty = bool(residual_model is not None and uncertainty_samples and uncertainty_samples > 0)
->>>>>>> feature/batch-runner-season
+    do_uncertainty = bool(
+        residual_model is not None and uncertainty_samples and uncertainty_samples > 0
+    )
     if residual_model is not None:
         residual_std = np.asarray(residual_model.target_stats.get('resid_std', np.zeros(2)), dtype=float)
         clip_min, clip_max = residual_model.clip_bounds
@@ -469,13 +498,36 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         int(d.nfl_id): build_series_for_player(d.nfl_id, def_pos[idx])
         for idx, d in enumerate(snap.defenders)
     }
+    # Pre-bake defender positions per frame (k=1..steps) to avoid static positions when output
+    # trajectories are available. Fallback is to repeat the snapshot position.
+    def_pos_series = np.zeros((steps, D, 2), dtype=float)
+    for j, d in enumerate(snap.defenders):
+        series = defender_series.get(int(d.nfl_id))
+        if series is None or series.shape[0] < steps + 1:
+            def_pos_series[:, j, :] = def_pos[j]
+        else:
+            def_pos_series[:, j, :] = series[1 : steps + 1]
+    min_def_dist_start: Optional[float] = None
+    min_def_dist_end: Optional[float] = None
+    progress_frames = max(1, steps - rel_offset)
+    if D > 0 and steps > 0:
+        alpha_start = min(1.0, max(0.0, 1 - rel_offset) / float(progress_frames))
+        alpha_end = 1.0
+        start_center = qb + alpha_start * vec
+        end_center = qb + alpha_end * vec
+        # Start distance uses snapshot positions; end uses last available positions (output-backed if present)
+        dists0 = np.linalg.norm(def_pos - start_center[None, :], axis=1)
+        min_def_dist_start = float(np.min(dists0))
+        dists_end = np.linalg.norm(def_pos_series[-1] - end_center[None, :], axis=1) if def_pos_series.size else np.array([])
+        if dists_end.size:
+            min_def_dist_end = float(np.min(dists_end))
 
     pursuit_eff: Dict[int, float] = {}
     hawk_reaction: Dict[int, float] = {}
     actual_arrival: Dict[int, float] = {}
     path_lengths: Dict[int, float] = {}
 
-    arrival_threshold = max(corridor_radius, 1.0)
+    arrival_threshold = max(radius_used, 1.0)
     for idx, d in enumerate(snap.defenders):
         series = defender_series.get(int(d.nfl_id))
         if series is None:
@@ -524,8 +576,19 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
     dacs_low_vals = []
     dacs_high_vals = []
     ps_at_T = {}
+    ps_at_checkpoints: Dict[str, Dict[int, float]] = {}
+    ps_norm_by_checkpoint: Dict[str, Dict[int, float]] = {}
     ce_vals = []
     ce_norm_vals = []
+    share_curves: Dict[int, List[float]] = {int(d.nfl_id): [] for d in snap.defenders}
+
+    checkpoint_frames: Dict[int, str] = {}
+    checkpoint_labels = [("q1", 0.25), ("mid", 0.50), ("q3", 0.75), ("final", 1.0)]
+    for label, ratio in checkpoint_labels:
+        frame_idx = max(1, int(round(ratio * steps)))
+        if frame_idx not in checkpoint_frames:
+            checkpoint_frames[frame_idx] = label
+    checkpoint_frames[steps] = "final"
 
     # For CTS and LII, compute once
     CTS = {}
@@ -573,19 +636,45 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         d_line[j] = float(np.linalg.norm(p - nearest))
     within_window = d_line <= PS_WINDOW_YDS
 
+    def _normalize_ps(ps_dict: Dict[int, float]) -> Dict[int, float]:
+        """Normalize player-share dict over defenders within the lane window."""
+        normalized: Dict[int, float] = {}
+        if not ps_dict:
+            return normalized
+        selected_ids = [int(snap.defenders[j].nfl_id) for j in range(D) if within_window[j]]
+        keys_in_window = [pid for pid in ps_dict.keys() if pid in selected_ids]
+        if not keys_in_window:
+            keys_in_window = list(ps_dict.keys())
+        pos_vals = {pid: max(0.0, float(ps_dict.get(pid, 0.0))) for pid in keys_in_window}
+        total_pos = float(sum(pos_vals.values()))
+        if total_pos > 1e-9:
+            for pid in keys_in_window:
+                normalized[pid] = float(pos_vals[pid] / total_pos)
+        else:
+            for pid in keys_in_window:
+                normalized[pid] = 0.0
+        return normalized
+
     # Main loop for DACS
-    corridor_centers: List[Tuple[float,float]] = []
-<<<<<<< HEAD
-=======
-    mc_dacs_samples = np.zeros((uncertainty_samples, steps), dtype=float) if do_uncertainty else None
->>>>>>> feature/batch-runner-season
+    corridor_centers: List[Tuple[float, float]] = []
+    mc_dacs_samples = (
+        np.zeros((uncertainty_samples, steps), dtype=float) if do_uncertainty else None
+    )
     for k, t in enumerate(times, start=1):
-        alpha = float(k) / float(steps)
+        progress_idx = max(0.0, float(k - rel_offset))
+        alpha = min(1.0, progress_idx / float(progress_frames))
         center = qb + alpha * vec  # straight-line interpolation
         corridor_centers.append((float(center[0]), float(center[1])))
+        def_pos_k = def_pos_series[k - 1] if D > 0 else np.zeros((0, 2), dtype=float)
+        if D > 0:
+            dists_k = np.linalg.norm(def_pos_k - center[None, :], axis=1)
+            # track running min distances for QA when we have per-frame positions
+            if min_def_dist_start is None:
+                min_def_dist_start = float(np.min(dists_k))
+            min_def_dist_end = float(np.min(dists_k))
 
         # Sample corridor points
-        P = sample_points_in_disk(center, corridor_radius, samples_per_t, rng)  # (M,2)
+        P = sample_points_in_disk(center, radius_used, samples_per_t, rng)  # (M,2)
 
         # Oriented ellipse reach per defender at horizon t
         base_a_axis = def_spd * t + 0.5 * a_max * (t * t)   # (D,)
@@ -607,11 +696,7 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
             scales = residual_model.predict_scales(feat_mat)
             long_scale = scales[:, 0]
             lat_scale = scales[:, 1]
-<<<<<<< HEAD
-            if residual_std is not None:
-=======
             if residual_std is not None and not do_uncertainty:
->>>>>>> feature/batch-runner-season
                 long_scale_low = np.clip(long_scale - residual_std[0], clip_min, clip_max)
                 long_scale_high = np.clip(long_scale + residual_std[0], clip_min, clip_max)
                 lat_scale_low = np.clip(lat_scale - residual_std[1], clip_min, clip_max)
@@ -632,8 +717,8 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         a_axis_high = np.maximum(base_a_axis * long_scale_high, 1e-6)
         b_axis_high = np.maximum(base_b_axis * lat_scale_high, 1e-6)
 
-        # Vector from defender to samples
-        diff = P[None, :, :] - def_pos[:, None, :]     # (D, M, 2)
+        # Vector from defender to samples (use per-frame defender positions if available)
+        diff = P[None, :, :] - def_pos_k[:, None, :] if D > 0 else np.zeros((0, P.shape[0], 2))
         dx = diff[:, :, 0]
         dy = diff[:, :, 1]
         # Rotate into defender's frame (x' along heading)
@@ -660,25 +745,28 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         dacs = dacs_frac * 100.0
         dacs_frac_vals.append(dacs_frac)
         dacs_vals.append(dacs)
-<<<<<<< HEAD
-        if residual_model is not None:
-=======
         if do_uncertainty and residual_model is not None and D > 0:
-            sample_scales = residual_model.sample_scales(feat_mat, uncertainty_samples, rng=rng)
+            sample_scales = residual_model.sample_scales(
+                feat_mat, uncertainty_samples, rng=rng
+            )
+            sample_scales = sample_scales.reshape(uncertainty_samples, D, -1)
             long_samples = sample_scales[:, :, 0]
             lat_samples = sample_scales[:, :, 1]
             a_axes_samples = np.maximum(base_a_axis[None, :] * long_samples, 1e-6)
             b_axes_samples = np.maximum(base_b_axis[None, :] * lat_samples, 1e-6)
             x_exp = xprime[None, :, :]
             y_exp = yprime[None, :, :]
-            inside_samples = (x_exp / a_axes_samples[:, :, None]) ** 2 + (y_exp / b_axes_samples[:, :, None]) ** 2 <= 1.0
+            inside_samples = (
+                (x_exp / a_axes_samples[:, :, None]) ** 2
+                + (y_exp / b_axes_samples[:, :, None]) ** 2
+                <= 1.0
+            )
             cover_samples = inside_samples.any(axis=1)
             sample_dacs = cover_samples.mean(axis=1) * 100.0
-            mc_dacs_samples[:, k-1] = sample_dacs
+            mc_dacs_samples[:, k - 1] = sample_dacs
             dacs_low_vals.append(float(np.percentile(sample_dacs, 5)))
             dacs_high_vals.append(float(np.percentile(sample_dacs, 95)))
         elif residual_model is not None:
->>>>>>> feature/batch-runner-season
             covered_low = inside_low.any(axis=0)
             covered_high = inside_high.any(axis=0)
             dacs_low_vals.append(float(covered_low.mean()) * 100.0)
@@ -694,6 +782,9 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
             collapse_vals.append((dacs_vals[-1] - dacs_vals[-2]) / dt)
 
         # Coverage Entropy: assign each covered sample to its nearest covering defender
+        nearest = np.array([], dtype=int)
+        unique = np.array([], dtype=int)
+        counts = np.array([], dtype=int)
         if covered.any():
             # Euclidean distances from defenders to samples
             dist_euclid = np.sqrt(dx*dx + dy*dy)  # (D, M)
@@ -719,32 +810,38 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
             ce_vals.append(0.0)
             ce_norm_vals.append(0.0)
 
-        # Player Share at final step only (reduce compute)
-        if k == steps:
-            # Precompute coverage by all others for each i in idx_ps
+        # Defender contribution curve (share of covered samples per frame)
+        if nearest.size > 0 and counts.size > 0:
+            total_cov = float(nearest.size)
+            count_lookup = {int(u): int(c) for u, c in zip(unique, counts)}
+            for idx_d, d in enumerate(snap.defenders):
+                share_val = float(count_lookup.get(idx_d, 0)) / total_cov
+                share_curves[int(d.nfl_id)].append(share_val)
+        else:
+            for d in snap.defenders:
+                share_curves[int(d.nfl_id)].append(0.0)
+
+        # Player Share checkpoints (marginal removal at a few frames including final)
+        if k in checkpoint_frames:
+            label = checkpoint_frames[k]
+            ps_checkpoint: Dict[int, float] = {}
             baseline_cov = covered.copy()
             for i in idx_ps:
-                # remove defender i's ellipse and recompute union boolean
                 covered_without_i = np.delete(cover_mat, i, axis=0).any(axis=0)
-                ps = float(baseline_cov.mean() - covered_without_i.mean()) * 100.0
-                ps_at_T[int(snap.defenders[i].nfl_id)] = max(0.0, ps)
+                ps_val = float(baseline_cov.mean() - covered_without_i.mean()) * 100.0
+                if ps_val > 0.0:
+                    ps_checkpoint[int(snap.defenders[i].nfl_id)] = max(0.0, ps_val)
+            ps_at_checkpoints[label] = ps_checkpoint
+            ps_norm_by_checkpoint[label] = _normalize_ps(ps_checkpoint)
+            if label == "final":
+                ps_at_T = ps_checkpoint
 
-    # Normalize Player Share over defenders near the flight path
-    player_share_norm_at_T = {}
-    if ps_at_T:
-        # select defenders within window and present in ps_at_T
-        selected_ids = [int(snap.defenders[j].nfl_id) for j in range(D) if within_window[j]]
-        keys_in_window = [pid for pid in ps_at_T.keys() if pid in selected_ids]
-        if not keys_in_window:
-            keys_in_window = list(ps_at_T.keys())
-        pos_vals = {pid: max(0.0, float(ps_at_T.get(pid, 0.0))) for pid in keys_in_window}
-        total_pos = float(sum(pos_vals.values()))
-        if total_pos > 1e-9:
-            for pid in keys_in_window:
-                player_share_norm_at_T[pid] = float(pos_vals[pid] / total_pos)
-        else:
-            for pid in keys_in_window:
-                player_share_norm_at_T[pid] = 0.0
+    if not ps_at_T and "final" in ps_at_checkpoints:
+        ps_at_T = ps_at_checkpoints.get("final", {})
+
+    player_share_norm_at_T = _normalize_ps(ps_at_T)
+    if "final" not in ps_norm_by_checkpoint and ps_at_T:
+        ps_norm_by_checkpoint["final"] = player_share_norm_at_T
 
     dacs_frac_arr = np.array(dacs_frac_vals, dtype=float)
     dacs_low_arr = np.array(dacs_low_vals, dtype=float)
@@ -765,49 +862,86 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         1.2
     ))
 
-    probs = np.array([
-        max(0.0, 1.0 - 0.75 * coverage_intensity),   # catch
-        max(0.0, 0.80 * coverage_intensity),         # incompletion/drop
-        max(0.0, 0.20 * coverage_intensity)          # interception
-    ], dtype=float)
+    collapse_rate_mean_val = float(np.mean(collapse_vals)) if collapse_vals else 0.0
+
+    probs = np.array(
+        [
+            max(0.0, 1.0 - 0.75 * coverage_intensity),  # catch
+            max(0.0, 0.80 * coverage_intensity),  # incompletion/drop
+            max(0.0, 0.20 * coverage_intensity),  # interception
+        ],
+        dtype=float,
+    )
     total_prob = probs.sum()
     if total_prob > 1e-6:
         probs /= total_prob
     p_catch, p_drop, p_int = probs.tolist()
     dvi = float(np.var(probs))
-<<<<<<< HEAD
-=======
+
     heuristic_probs = {
-        'catch': float(p_catch),
-        'incomplete': float(p_drop),
-        'interception': float(p_int),
+        "catch": float(p_catch),
+        "incomplete": float(p_drop),
+        "interception": float(p_int),
     }
 
+    ps_norm_vals_sorted = sorted(
+        [float(v) for v in (player_share_norm_at_T or {}).values()], reverse=True
+    )
+    ps_norm_top1 = ps_norm_vals_sorted[0] if ps_norm_vals_sorted else 0.0
+    ps_norm_top2 = ps_norm_vals_sorted[1] if len(ps_norm_vals_sorted) > 1 else 0.0
+    share_area = {}
+    for pid, curve in share_curves.items():
+        arr = np.asarray(curve, dtype=float)
+        share_area[pid] = float(np.trapz(arr, dx=dt)) if arr.size else 0.0
+    total_share_area = float(sum(share_area.values()))
+    air_control_war = {
+        pid: (area_val / max(total_time, 1e-6)) for pid, area_val in share_area.items()
+    }
+    air_control_war_norm = (
+        {pid: area_val / total_share_area for pid, area_val in share_area.items()}
+        if total_share_area > 1e-9
+        else {}
+    )
+
     feature_payload = {
-        'n_defenders': len(snap.defenders),
-        'corridor_length': float(L),
-        'num_frames_output': int(snap.num_frames_output),
-        'dacs_final': dacs_final,
-        'dacs_final_lo': dacs_final_lo,
-        'dacs_final_hi': dacs_final_hi,
-        'coverage_intensity': coverage_intensity,
-        'dvi': dvi,
-        'bfoi': bfoi,
+        "n_defenders": len(snap.defenders),
+        "corridor_length": float(L),
+        "num_frames_output": int(snap.num_frames_output),
+        "effective_steps": int(steps),
+        "release_offset_frames": int(rel_offset),
+        "corridor_radius_used": float(radius_used),
+        "min_def_dist_start": float(min_def_dist_start) if min_def_dist_start is not None else math.nan,
+        "min_def_dist_end": float(min_def_dist_end) if min_def_dist_end is not None else math.nan,
+        "no_contest_radius_flag": bool(
+            (min_def_dist_start is not None and min_def_dist_end is not None)
+            and (min_def_dist_start > radius_used + 2.0)
+            and (min_def_dist_end > radius_used + 2.0)
+        ),
+        "dacs_final": dacs_final,
+        "dacs_final_lo": dacs_final_lo,
+        "dacs_final_hi": dacs_final_hi,
+        "coverage_intensity": coverage_intensity,
+        "dvi": dvi,
+        "bfoi": bfoi,
+        "collapse_rate_mean": collapse_rate_mean_val,
+        "ps_norm_top1": ps_norm_top1,
+        "ps_norm_top2": ps_norm_top2,
+        "prob_catch_prior": heuristic_probs["catch"],
+        "prob_incomplete_prior": heuristic_probs["incomplete"],
+        "prob_interception_prior": heuristic_probs["interception"],
     }
 
     event_probabilities = heuristic_probs.copy()
-    if outcome_model is not None:
+    if outcome_model is not None and predict_event_probs is not None:
         try:
-            feature_vec = feature_vector_from_play(outcome_model.features, feature_payload, heuristic_probs)
-            cal_probs = predict_event_probs(outcome_model, feature_vec)
+            cal_probs = predict_event_probs(outcome_model, feature_payload, heuristic_probs)
             if cal_probs:
                 event_probabilities = cal_probs
-                p_catch = event_probabilities['catch']
-                p_drop = event_probabilities['incomplete']
-                p_int = event_probabilities['interception']
+                p_catch = event_probabilities["catch"]
+                p_drop = event_probabilities["incomplete"]
+                p_int = event_probabilities["interception"]
         except Exception as exc:  # noqa: BLE001
             print(f"[WARN] Outcome model inference failed: {exc}")
->>>>>>> feature/batch-runner-season
 
     event_epa_map = event_epa_map or {}
     epa_catch = float(event_epa_map.get('C', baseline_epa_default))
@@ -815,66 +949,59 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
     epa_int = float(event_epa_map.get('IN', -2.5))
     expected_epa_cov = float(p_catch * epa_catch + p_drop * epa_drop + p_int * epa_int)
 
-    pass_length_val = ''
-    pass_loc_val = ''
-    pass_result_val = ''
-<<<<<<< HEAD
-=======
-    route_val = ''
-    dropback_type_val = ''
-    dropback_distance_val = ''
-    coverage_type_val = ''
-    coverage_man_zone_val = ''
+    pass_length_val = ""
+    pass_loc_val = ""
+    pass_result_val = ""
+    route_val = ""
+    dropback_type_val = ""
+    dropback_distance_val = ""
+    coverage_type_val = ""
+    coverage_man_zone_val = ""
     expected_epa_val = math.nan
->>>>>>> feature/batch-runner-season
     baseline_epa = baseline_epa_default
     actual_epa = baseline_epa_default
     if supplementary_row is not None:
-        pass_length_val = str(getattr(supplementary_row, 'pass_length', '') or '')
-        pass_loc_val = str(getattr(supplementary_row, 'pass_location_type', '') or '')
-<<<<<<< HEAD
-        key = (pass_length_val, pass_loc_val)
-        if baseline_epa_map is not None:
-            baseline_epa = float(baseline_epa_map.get(key, baseline_epa_default))
-        actual_epa_val = getattr(supplementary_row, 'expected_points_added', baseline_epa)
-=======
-        route_val = str(getattr(supplementary_row, 'route_of_targeted_receiver', '') or '')
-        dropback_type_val = str(getattr(supplementary_row, 'dropback_type', '') or '')
-        dropback_distance_val = getattr(supplementary_row, 'dropback_distance', math.nan)
-        coverage_type_val = str(getattr(supplementary_row, 'team_coverage_type', '') or '')
-        coverage_man_zone_val = str(getattr(supplementary_row, 'team_coverage_man_zone', '') or '')
-        expected_epa_val = getattr(supplementary_row, 'expected_points_added', math.nan)
+        pass_length_val = str(getattr(supplementary_row, "pass_length", "") or "")
+        pass_loc_val = str(getattr(supplementary_row, "pass_location_type", "") or "")
+        route_val = str(getattr(supplementary_row, "route_of_targeted_receiver", "") or "")
+        dropback_type_val = str(getattr(supplementary_row, "dropback_type", "") or "")
+        dropback_distance_val = getattr(supplementary_row, "dropback_distance", math.nan)
+        coverage_type_val = str(getattr(supplementary_row, "team_coverage_type", "") or "")
+        coverage_man_zone_val = str(
+            getattr(supplementary_row, "team_coverage_man_zone", "") or ""
+        )
+        expected_epa_val = getattr(supplementary_row, "expected_points_added", math.nan)
         key = (pass_length_val, pass_loc_val)
         if baseline_epa_map is not None:
             baseline_epa = float(baseline_epa_map.get(key, baseline_epa_default))
         actual_epa_val = expected_epa_val if not math.isnan(expected_epa_val) else baseline_epa
->>>>>>> feature/batch-runner-season
         try:
             actual_epa = float(actual_epa_val)
         except (TypeError, ValueError):
             actual_epa = baseline_epa
         if math.isnan(actual_epa):
             actual_epa = baseline_epa
-        pass_result_val = str(getattr(supplementary_row, 'pass_result', ''))
-<<<<<<< HEAD
-=======
+        pass_result_val = str(getattr(supplementary_row, "pass_result", ""))
+
     # Add supplementary-driven fields into payload for outcome model
-    def _to_float(val):
+    def _to_float(val: Any) -> float:
         try:
             return float(val)
         except (TypeError, ValueError):
             return math.nan
-    feature_payload.update({
-        'pass_length': _to_float(pass_length_val),
-        'pass_location_type': pass_loc_val,
-        'route_of_targeted_receiver': route_val,
-        'dropback_type': dropback_type_val,
-        'dropback_distance': _to_float(dropback_distance_val),
-        'team_coverage_type': coverage_type_val,
-        'team_coverage_man_zone': coverage_man_zone_val,
-        'expected_points_added': _to_float(expected_epa_val),
-    })
->>>>>>> feature/batch-runner-season
+
+    feature_payload.update(
+        {
+            "pass_length": _to_float(pass_length_val),
+            "pass_location_type": pass_loc_val,
+            "route_of_targeted_receiver": route_val,
+            "dropback_type": dropback_type_val,
+            "dropback_distance": _to_float(dropback_distance_val),
+            "team_coverage_type": coverage_type_val,
+            "team_coverage_man_zone": coverage_man_zone_val,
+            "expected_points_added": _to_float(expected_epa_val),
+        }
+    )
 
     eaepa_model = float(baseline_epa - expected_epa_cov)
     eaepa_realized = float(baseline_epa - actual_epa)
@@ -888,12 +1015,6 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
     arrival_vals = [v for v in actual_arrival.values() if not math.isnan(v)]
     arrival_mean = float(np.mean(arrival_vals)) if arrival_vals else math.nan
     arrival_min = float(np.min(arrival_vals)) if arrival_vals else math.nan
-
-    event_probabilities = {
-        'catch': float(p_catch),
-        'incomplete': float(p_drop),
-        'interception': float(p_int),
-    }
 
     pursuit_summary_dict = {
         'mean': None if math.isnan(pursuit_mean) else pursuit_mean,
@@ -925,6 +1046,10 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         'collapse_rate_series': collapse_vals,      # % per second
         'player_share_at_T': ps_at_T,               # % contribution at catch
         'player_share_norm_at_T': player_share_norm_at_T,  # normalized shares over window
+        'player_share_checkpoints': ps_at_checkpoints,
+        'player_share_norm_checkpoints': ps_norm_by_checkpoint,
+        'air_control_war': air_control_war,
+        'air_control_war_norm': air_control_war_norm,
         'CTS': CTS,
         'CTS_spec': CTS_spec,
         'LII': LII,
@@ -945,10 +1070,7 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         'dacs_final_lo': dacs_final_lo,
         'dacs_final_hi': dacs_final_hi,
         'coverage_intensity': coverage_intensity,
-<<<<<<< HEAD
-=======
         'event_probabilities_prior': heuristic_probs,
->>>>>>> feature/batch-runner-season
         'event_probabilities': event_probabilities,
         'baseline_epa': baseline_epa,
         'expected_epa_coverage': expected_epa_cov,
@@ -966,15 +1088,12 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
             'corridor_radius': float(corridor_radius),
         }
     }
-<<<<<<< HEAD
-=======
     if do_uncertainty and mc_dacs_samples is not None:
         out['uncertainty'] = {
             'n_samples': int(uncertainty_samples),
             'dacs_series_p05': dacs_low_vals,
             'dacs_series_p95': dacs_high_vals,
         }
->>>>>>> feature/batch-runner-season
     return out
 
 
@@ -982,25 +1101,22 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
 # Main pipeline
 # -----------------------------
 
-def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
-<<<<<<< HEAD
-                           samples_per_t: int = SAMPLES_PER_T,
-                           corridor_radius: float = CORRIDOR_RADIUS_YDS,
-                           topk_ps: int = PLAYER_SHARE_TOPK,
-                           seed: int = 42,
-                           residual_model_path: Optional[str] = None,
-                           use_residual_model: bool = True) -> Tuple[pd.DataFrame, List[str]]:
-=======
-                          samples_per_t: int = SAMPLES_PER_T,
-                          corridor_radius: float = CORRIDOR_RADIUS_YDS,
-                          topk_ps: int = PLAYER_SHARE_TOPK,
-                          seed: int = 42,
-                          residual_model_path: Optional[str] = None,
-                          use_residual_model: bool = True,
-                          uncertainty_samples: int = 0,
-                          outcome_model_path: Optional[str] = None,
-                          use_outcome_model: bool = True) -> Tuple[pd.DataFrame, List[str]]:
->>>>>>> feature/batch-runner-season
+def compute_dacs_for_game(
+    root_dir: str,
+    game_id: int,
+    out_dir: str,
+    samples_per_t: int = SAMPLES_PER_T,
+    corridor_radius: float = CORRIDOR_RADIUS_YDS,
+    topk_ps: int = PLAYER_SHARE_TOPK,
+    seed: int = 42,
+    residual_model_path: Optional[str] = None,
+    use_residual_model: bool = True,
+    uncertainty_samples: int = 0,
+    outcome_model_path: Optional[str] = None,
+    use_outcome_model: bool = True,
+    use_ball_flight_heuristic: bool = True,
+    ball_speed_yds_per_s: float = 26.0,
+) -> Tuple[pd.DataFrame, List[str]]:
     a_max, v_cap = load_calibration(root_dir)
     files = analytics_input_files(root_dir)
     output_files = analytics_output_files(root_dir)
@@ -1043,43 +1159,59 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
         residual_model = load_residual_model(model_path)
         if residual_model is None:
             print(f"[WARN] Residual model not found at {model_path}; using physics-only reach.")
-
-<<<<<<< HEAD
-=======
     outcome_model_bundle: Optional[OutcomeModelBundle] = None
     if use_outcome_model:
-        outcome_path = outcome_model_path or os.path.join(root_dir, 'analytics', 'models', 'outcome_model.joblib')
-        if os.path.exists(outcome_path):
-            try:
-                outcome_model_bundle = load_outcome_model(outcome_path)
-            except Exception as exc:  # noqa: BLE001
-                print(f"[WARN] Failed to load outcome model at {outcome_path}: {exc}")
+        if not HAS_OUTCOME_MODEL_SUPPORT or load_outcome_model is None:
+            print("[INFO] Outcome model module not available; heuristics will be used.")
         else:
-            print(f"[INFO] Outcome model not found at {outcome_path}; heuristics will be used.")
-
->>>>>>> feature/batch-runner-season
+            default_outcome = os.path.join(root_dir, 'analytics', 'models', 'outcome_model.joblib')
+            preferred_outcome = os.path.join(root_dir, 'analytics', 'models', 'outcome_model_full_histgb.joblib')
+            outcome_path = outcome_model_path or (preferred_outcome if os.path.exists(preferred_outcome) else default_outcome)
+            if os.path.exists(outcome_path):
+                try:
+                    outcome_model_bundle = load_outcome_model(outcome_path)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[WARN] Failed to load outcome model at {outcome_path}: {exc}")
+            else:
+                print(f"[INFO] Outcome model not found at {outcome_path}; heuristics will be used.")
     for snap in snapshots:
         play_output = outputs_by_play.get(snap.play_id)
         supp_row = supp_lookup.get(snap.play_id)
         result = dacs_time_series(
             snap, a_max=a_max, v_cap=v_cap, dt=DT,
             samples_per_t=samples_per_t, corridor_radius=corridor_radius,
-<<<<<<< HEAD
-            topk_ps=topk_ps, seed=seed, residual_model=residual_model, play_output=play_output,
-=======
             topk_ps=topk_ps, seed=seed, residual_model=residual_model,
             uncertainty_samples=uncertainty_samples,
             play_output=play_output,
->>>>>>> feature/batch-runner-season
             supplementary_row=supp_row,
             baseline_epa_map=baseline_epa_map,
             baseline_epa_default=baseline_epa_default,
             event_epa_map=event_epa_map,
-<<<<<<< HEAD
-=======
             outcome_model=outcome_model_bundle,
->>>>>>> feature/batch-runner-season
+            use_ball_flight_heuristic=use_ball_flight_heuristic,
+            ball_speed_yds_per_s=ball_speed_yds_per_s,
         )
+        # Fallbacks for min defender distances if downstream calc left them NaN/None
+        if result.get("min_def_dist_start") is None or math.isnan(float(result.get("min_def_dist_start", math.nan))):
+            def_positions = np.array([d.pos for d in snap.defenders], dtype=float)
+            if def_positions.size:
+                start_center = np.array(snap.qb_pos, dtype=float) + (1.0 / max(1.0, float(snap.num_frames_output))) * (np.array(snap.ball_land, dtype=float) - np.array(snap.qb_pos, dtype=float))
+                result["min_def_dist_start"] = float(np.min(np.linalg.norm(def_positions - start_center[None, :], axis=1)))
+        if result.get("min_def_dist_end") is None or math.isnan(float(result.get("min_def_dist_end", math.nan))):
+            def_positions = np.array([d.pos for d in snap.defenders], dtype=float)
+            if def_positions.size:
+                end_center = np.array(snap.ball_land, dtype=float)
+                result["min_def_dist_end"] = float(np.min(np.linalg.norm(def_positions - end_center[None, :], axis=1)))
+        if "no_contest_radius_flag" not in result or result.get("no_contest_radius_flag") is None:
+            sd = result.get("min_def_dist_start", math.nan)
+            ed = result.get("min_def_dist_end", math.nan)
+            radius_used = float(result.get("corridor_radius_used", corridor_radius))
+            result["no_contest_radius_flag"] = bool(
+                (not math.isnan(sd))
+                and (not math.isnan(ed))
+                and sd > radius_used + 2.0
+                and ed > radius_used + 2.0
+            )
 
         # Save per-play JSON
         jpath = os.path.join(out_dir, f"game_{snap.game_id}_play_{snap.play_id}.json")
@@ -1113,6 +1245,16 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
         top_ps_id, top_ps_val = (None, 0.0)
         if ps_items:
             top_ps_id, top_ps_val = max(ps_items, key=lambda kv: kv[1])
+
+        ps_norm_checkpoints = result.get('player_share_norm_checkpoints', {}) or {}
+        def _checkpoint_top(label: str) -> float:
+            vals = ps_norm_checkpoints.get(label, {})
+            return float(max(vals.values())) if vals else math.nan
+
+        ac_war_norm = result.get('air_control_war_norm', {}) or {}
+        ac_war_vals_sorted = sorted([float(v) for v in ac_war_norm.values()], reverse=True)
+        ac_war_top1 = ac_war_vals_sorted[0] if ac_war_vals_sorted else math.nan
+        ac_war_top2 = ac_war_vals_sorted[1] if len(ac_war_vals_sorted) > 1 else math.nan
 
         bfoi = float(result.get('bfoi', np.nan))
         coverage_intensity = float(result.get('coverage_intensity', np.nan))
@@ -1151,11 +1293,17 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
             'n_defenders': len(snap.defenders),
             'num_frames_output': snap.num_frames_output,
             'corridor_len': result['corridor_length'],
+            'corridor_radius_used': float(result.get('corridor_radius_used', corridor_radius)),
+            'effective_steps': int(result.get('effective_steps', snap.num_frames_output)),
+            'release_offset_frames': int(result.get('release_offset_frames', 0)),
             'dacs_mean': dacs_mean,
             'dacs_max': dacs_max,
             'dacs_final': dacs_final,
             'dacs_final_lo': dacs_final_lo,
             'dacs_final_hi': dacs_final_hi,
+            'min_def_dist_start': float(result.get('min_def_dist_start', math.nan)),
+            'min_def_dist_end': float(result.get('min_def_dist_end', math.nan)),
+            'no_contest_radius_flag': bool(result.get('no_contest_radius_flag', False)),
             'peak_collapse_rate': peak_collapse,
             'time_to_50pct': time_to_50,
             'top_contributor_nfl_id': top_ps_id,
@@ -1182,6 +1330,12 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
             'pass_result': pass_result_val,
             'pass_length': pass_length_val,
             'pass_location_type': pass_loc_val,
+            'ps_norm_q1_top1': _checkpoint_top('q1'),
+            'ps_norm_mid_top1': _checkpoint_top('mid'),
+            'ps_norm_q3_top1': _checkpoint_top('q3'),
+            'ps_norm_final_top1': _checkpoint_top('final'),
+            'air_control_war_top1': ac_war_top1,
+            'air_control_war_top2': ac_war_top2,
         })
 
         # accumulate timeseries rows
@@ -1247,12 +1401,32 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
         # determinism (re-run first play)
         if snapshots:
             test_snap = snapshots[0]
-            r1 = dacs_time_series(test_snap, a_max=a_max, v_cap=v_cap, dt=DT,
-                                  samples_per_t=samples_per_t, corridor_radius=corridor_radius,
-                                  topk_ps=topk_ps, seed=seed)
-            r2 = dacs_time_series(test_snap, a_max=a_max, v_cap=v_cap, dt=DT,
-                                  samples_per_t=samples_per_t, corridor_radius=corridor_radius,
-                                  topk_ps=topk_ps, seed=seed)
+            r1 = dacs_time_series(
+                test_snap,
+                a_max=a_max,
+                v_cap=v_cap,
+                dt=DT,
+                samples_per_t=samples_per_t,
+                corridor_radius=corridor_radius,
+                topk_ps=topk_ps,
+                seed=seed,
+                residual_model=residual_model,
+                uncertainty_samples=uncertainty_samples,
+                outcome_model=outcome_model_bundle,
+            )
+            r2 = dacs_time_series(
+                test_snap,
+                a_max=a_max,
+                v_cap=v_cap,
+                dt=DT,
+                samples_per_t=samples_per_t,
+                corridor_radius=corridor_radius,
+                topk_ps=topk_ps,
+                seed=seed,
+                residual_model=residual_model,
+                uncertainty_samples=uncertainty_samples,
+                outcome_model=outcome_model_bundle,
+            )
             qa['deterministic'] = bool(np.allclose(r1['dacs_series'], r2['dacs_series']))
     except Exception as e:
         qa['error'] = str(e)
@@ -1287,7 +1461,12 @@ def main():
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--residual_model_path', type=str, default=None, help='Path to residual reach model joblib')
     parser.add_argument('--no_residual', action='store_true', help='Disable residual reach corrections')
+    parser.add_argument('--uncertainty_samples', type=int, default=0, help='Monte Carlo samples for reach uncertainty (requires residual model)')
+    parser.add_argument('--outcome_model_path', type=str, default=None, help='Path to calibrated outcome model checkpoint')
+    parser.add_argument('--no_outcome', action='store_true', help='Disable outcome model calibration (use heuristics)')
     parser.add_argument('--list_games', action='store_true', help='List some available game_ids and exit')
+    parser.add_argument('--ball_flight_heuristic', action='store_true', default=True, help='Use pass_length + assumed ball speed to set flight frames and corridor progression')
+    parser.add_argument('--ball_speed', type=float, default=26.0, help='Assumed ball speed (yds/s) when ball_flight_heuristic is enabled')
     args = parser.parse_args()
 
     root_dir = os.getcwd()
@@ -1310,6 +1489,11 @@ def main():
         seed=args.seed,
         residual_model_path=args.residual_model_path,
         use_residual_model=(not args.no_residual),
+        uncertainty_samples=args.uncertainty_samples,
+        outcome_model_path=args.outcome_model_path,
+        use_outcome_model=(not args.no_outcome),
+        use_ball_flight_heuristic=args.ball_flight_heuristic,
+        ball_speed_yds_per_s=args.ball_speed,
     )
 
     print(df_summary.head(10).to_string(index=False))
