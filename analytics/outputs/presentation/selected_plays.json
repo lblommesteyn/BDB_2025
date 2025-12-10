@@ -1,0 +1,17 @@
+[
+  {
+    "game_id": 2023101600,
+    "play_id": 4456,
+    "desc": "High DACS Interception"
+  },
+  {
+    "game_id": 2023101600,
+    "play_id": 2220,
+    "desc": "Low DACS Completion"
+  },
+  {
+    "game_id": 2023091011,
+    "play_id": 1224,
+    "desc": "High DACS Incompletion"
+  }
+]

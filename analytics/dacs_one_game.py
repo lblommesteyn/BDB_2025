@@ -20,6 +20,18 @@ from analytics.residual_model import (
     build_feature_vector,
     load_residual_model,
 )
+from analytics.outcome_model import (
+    load_outcome_model,
+    predict_event_probs,
+    feature_vector_from_play,
+    OutcomeModelBundle
+)
+from analytics.outcome_model import (
+    load_outcome_model,
+    predict_event_probs,
+    feature_vector_from_play,
+    OutcomeModelBundle
+)
 
 # -----------------------------
 # Constants and calibration
@@ -51,10 +63,10 @@ USECOLS_IN = [
 ]
 
 DTYPES_IN = {
-    'game_id': 'int64','play_id': 'int64','player_to_predict':'boolean','nfl_id':'int64','frame_id':'int16',
+    'game_id': 'int64','play_id': 'int64','player_to_predict':'boolean','nfl_id':'int64','frame_id':'float32',
     'play_direction':'category','absolute_yardline_number':'float32','player_name':'object','player_height':'object',
     'player_weight':'float32','player_birth_date':'object','player_position':'category','player_side':'category','player_role':'category',
-    'x':'float32','y':'float32','s':'float32','a':'float32','dir':'float32','o':'float32','num_frames_output':'int16','ball_land_x':'float32','ball_land_y':'float32'
+    'x':'float32','y':'float32','s':'float32','a':'float32','dir':'float32','o':'float32','num_frames_output':'float32','ball_land_x':'float32','ball_land_y':'float32'
 }
 
 SUPP_USECOLS = [
@@ -69,7 +81,7 @@ _EPA_EVENT_MEANS: Optional[Dict[str, float]] = None
 
 OUTPUT_USECOLS = ['game_id','play_id','nfl_id','frame_id','x','y']
 OUTPUT_DTYPES = {
-    'game_id':'int64','play_id':'int64','nfl_id':'int64','frame_id':'int16','x':'float32','y':'float32'
+    'game_id':'int64','play_id':'int64','nfl_id':'int64','frame_id':'float32','x':'float32','y':'float32'
 }
 
 @dataclass
@@ -121,17 +133,20 @@ def load_calibration(root_dir: str) -> Tuple[float, float]:
     return a_max, v_cap
 
 
+
 def analytics_input_files(root_dir: str) -> List[str]:
-    base = os.path.join(root_dir, 'analytics', 'data', '114239_nfl_competition_files_published_analytics_final')
-    files = sorted(glob.glob(os.path.join(base, 'train', 'input_2023_w*.csv')))
+    base = os.path.join(root_dir, 'analytics', 'data', 'raw', '114239_nfl_competition_files_published_analytics_final', 'train')
+    files = sorted(glob.glob(os.path.join(base, 'input_2023_w*.csv')))
+    # Filter out empty files
+    files = [f for f in files if os.path.getsize(f) > 0]
     if not files:
         raise FileNotFoundError(f"No analytics input CSVs found under {base}")
     return files
 
 
 def analytics_output_files(root_dir: str) -> List[str]:
-    base = os.path.join(root_dir, 'analytics', 'data', '114239_nfl_competition_files_published_analytics_final')
-    files = sorted(glob.glob(os.path.join(base, 'train', 'output_2023_w*.csv')))
+    base = os.path.join(root_dir, 'analytics', 'data', 'raw', '114239_nfl_competition_files_published_analytics_final', 'train')
+    files = sorted(glob.glob(os.path.join(base, 'output_2023_w*.csv')))
     if not files:
         raise FileNotFoundError(f"No analytics output CSVs found under {base}")
     return files
@@ -165,7 +180,8 @@ def load_game_rows(files: List[str], game_id: int) -> pd.DataFrame:
     """Load all rows for a specific game_id across all input CSVs via chunked reads."""
     dfs = []
     for f in files:
-        for chunk in pd.read_csv(f, usecols=USECOLS_IN, dtype=DTYPES_IN, chunksize=200_000):
+        # Using engine='python' to avoid C-engine parsing issues with this dataset
+        for chunk in pd.read_csv(f, usecols=USECOLS_IN, dtype=DTYPES_IN, chunksize=200_000, engine='python'):
             g = chunk[chunk['game_id'] == game_id]
             if not g.empty:
                 dfs.append(g)
@@ -176,9 +192,10 @@ def load_game_rows(files: List[str], game_id: int) -> pd.DataFrame:
 
 
 def load_supplementary_rows(root_dir: str, game_id: int) -> pd.DataFrame:
-    supp_path = os.path.join(root_dir, 'analytics', 'data', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
+    supp_path = os.path.join(root_dir, 'analytics', 'data', 'raw', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
+    print(f"DEBUG: Checking supplementary path: {supp_path}")
     if not os.path.exists(supp_path):
-        raise FileNotFoundError("supplementary_data.csv not found.")
+        raise FileNotFoundError(f"supplementary_data.csv not found at {supp_path}")
     df = pd.read_csv(supp_path, usecols=SUPP_USECOLS, dtype={
         'game_id':'int64','play_id':'int64','pass_result':'category','route_of_targeted_receiver':'category',
         'team_coverage_type':'category','team_coverage_man_zone':'category','dropback_type':'category',
@@ -193,9 +210,10 @@ def baseline_epa_lookup(root_dir: str) -> pd.Series:
     global _BASELINE_EPA_CACHE, _BASELINE_EPA_MEAN, _EPA_EVENT_MEANS
     if _BASELINE_EPA_CACHE is not None:
         return _BASELINE_EPA_CACHE
-    supp_path = os.path.join(root_dir, 'analytics', 'data', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
+    supp_path = os.path.join(root_dir, 'analytics', 'data', 'raw', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
+    print(f"DEBUG: Checking baseline EPA path: {supp_path}")
     if not os.path.exists(supp_path):
-        raise FileNotFoundError("supplementary_data.csv not found.")
+        raise FileNotFoundError(f"supplementary_data.csv not found at {supp_path}")
     df = pd.read_csv(
         supp_path,
         usecols=['pass_length','pass_location_type','expected_points_added','pass_result'],
@@ -206,6 +224,8 @@ def baseline_epa_lookup(root_dir: str) -> pd.Series:
     _BASELINE_EPA_MEAN = float(df['expected_points_added'].mean())
     _EPA_EVENT_MEANS = df.groupby('pass_result', observed=True)['expected_points_added'].mean().to_dict()
     return grouped
+
+
 
 
 def event_epa_means(root_dir: str) -> Dict[str, float]:
@@ -365,7 +385,9 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
                      supplementary_row: Optional[Any] = None,
                      baseline_epa_map: Optional[Dict[Tuple[str, str], float]] = None,
                      baseline_epa_default: float = 0.0,
-                     event_epa_map: Optional[Dict[str, float]] = None) -> Dict:
+                     event_epa_map: Optional[Dict[str, float]] = None,
+                     outcome_model: Optional[OutcomeModelBundle] = None,
+                     uncertainty_samples: int = 50) -> Dict:
     rng = np.random.default_rng(seed)
 
     qb = np.array(snap.qb_pos, dtype=float)
@@ -558,29 +580,26 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
                 )
                 for d in snap.defenders
             ])
+            # Central prediction
             scales = residual_model.predict_scales(feat_mat)
             long_scale = scales[:, 0]
             lat_scale = scales[:, 1]
-            if residual_std is not None:
-                long_scale_low = np.clip(long_scale - residual_std[0], clip_min, clip_max)
-                long_scale_high = np.clip(long_scale + residual_std[0], clip_min, clip_max)
-                lat_scale_low = np.clip(lat_scale - residual_std[1], clip_min, clip_max)
-                lat_scale_high = np.clip(lat_scale + residual_std[1], clip_min, clip_max)
-            else:
-                long_scale_low = long_scale_high = long_scale
-                lat_scale_low = lat_scale_high = lat_scale
+            
+            # Sampling for uncertainty
+            # Returns (D * S, 2)
+            sampled_scales_flat = residual_model.sample_scales(feat_mat, n_samples=uncertainty_samples, rng=rng)
+            # Reshape to (D, S, 2)
+            sampled_scales = sampled_scales_flat.reshape(D, uncertainty_samples, 2)
+            long_scale_samp = sampled_scales[:, :, 0]  # (D, S)
+            lat_scale_samp = sampled_scales[:, :, 1]   # (D, S)
         else:
             long_scale = np.ones_like(base_a_axis)
             lat_scale = np.ones_like(base_b_axis)
-            long_scale_low = long_scale_high = long_scale
-            lat_scale_low = lat_scale_high = lat_scale
+            long_scale_samp = None
+            lat_scale_samp = None
 
         a_axis = np.maximum(base_a_axis * long_scale, 1e-6)
         b_axis = np.maximum(base_b_axis * lat_scale, 1e-6)
-        a_axis_low = np.maximum(base_a_axis * long_scale_low, 1e-6)
-        b_axis_low = np.maximum(base_b_axis * lat_scale_low, 1e-6)
-        a_axis_high = np.maximum(base_a_axis * long_scale_high, 1e-6)
-        b_axis_high = np.maximum(base_b_axis * lat_scale_high, 1e-6)
 
         # Vector from defender to samples
         diff = P[None, :, :] - def_pos[:, None, :]     # (D, M, 2)
@@ -593,31 +612,53 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         aa = np.maximum(a_axis, 1e-6)[:, None]
         bb = np.maximum(b_axis, 1e-6)[:, None]
         inside = (xprime / aa) ** 2 + (yprime / bb) ** 2 <= 1.0    # (D, M)
-        if residual_model is not None:
-            aa_low = np.maximum(a_axis_low, 1e-6)[:, None]
-            bb_low = np.maximum(b_axis_low, 1e-6)[:, None]
-            aa_high = np.maximum(a_axis_high, 1e-6)[:, None]
-            bb_high = np.maximum(b_axis_high, 1e-6)[:, None]
-            inside_low = (xprime / aa_low) ** 2 + (yprime / bb_low) ** 2 <= 1.0
-            inside_high = (xprime / aa_high) ** 2 + (yprime / bb_high) ** 2 <= 1.0
-        else:
-            inside_low = inside_high = inside
 
-        # Coverage boolean: any defender ellipse contains the sample
+        # Uncertainty bands
+        if residual_model is not None and D > 0 and long_scale_samp is not None:
+            # Broadcast base axes: (D, 1) * (D, S) -> (D, S)
+            aa_samp = np.maximum(base_a_axis[:, None] * long_scale_samp, 1e-6)
+            bb_samp = np.maximum(base_b_axis[:, None] * lat_scale_samp, 1e-6)
+            
+            # xprime, yprime are (D, M). Need (D, 1, M)
+            xp = xprime[:, None, :]
+            yp = yprime[:, None, :]
+            
+            # aa_samp is (D, S). Need (D, S, 1)
+            aa_s = aa_samp[:, :, None]
+            bb_s = bb_samp[:, :, None]
+            
+            # Ellipse check: (D, S, M)
+            inside_samp = (xp / aa_s) ** 2 + (yp / bb_s) ** 2 <= 1.0
+            
+            # Covered: any defender covers sample m in realization s?
+            # Any over D -> (S, M)
+            covered_samp = inside_samp.any(axis=0)
+            
+            # DACS per realization: mean over M -> (S,)
+            dacs_s = covered_samp.mean(axis=1) * 100.0
+            
+            dacs_low = float(np.percentile(dacs_s, 5))
+            dacs_high = float(np.percentile(dacs_s, 95))
+        else:
+            # Fallback if no model
+            # Coverage boolean: any defender ellipse contains the sample
+            cover_mat = inside
+            covered = cover_mat.any(axis=0)             # (M,)
+            dacs_frac = float(covered.mean())
+            dacs_val = dacs_frac * 100.0
+            dacs_low = dacs_val
+            dacs_high = dacs_val
+
+        # Coverage boolean: any defender ellipse contains the sample (Central)
         cover_mat = inside
         covered = cover_mat.any(axis=0)             # (M,)
         dacs_frac = float(covered.mean())
         dacs = dacs_frac * 100.0
         dacs_frac_vals.append(dacs_frac)
         dacs_vals.append(dacs)
-        if residual_model is not None:
-            covered_low = inside_low.any(axis=0)
-            covered_high = inside_high.any(axis=0)
-            dacs_low_vals.append(float(covered_low.mean()) * 100.0)
-            dacs_high_vals.append(float(covered_high.mean()) * 100.0)
-        else:
-            dacs_low_vals.append(dacs)
-            dacs_high_vals.append(dacs)
+        
+        dacs_low_vals.append(dacs_low)
+        dacs_high_vals.append(dacs_high)
 
         # Collapse rate (finite diff)
         if len(dacs_vals) == 1:
@@ -690,6 +731,9 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
     dacs_final_hi = float(dacs_high_arr[-1]) if dacs_high_arr.size > 0 else dacs_final
     ce_final_norm = float(ce_norm_arr[-1]) if ce_norm_arr.size > 0 else 0.0
 
+    idx_50 = np.where(dacs_frac_arr >= 0.50)[0]
+    time_to_50pct = float(times[idx_50[0]]) if idx_50.size > 0 else 0.0
+
     cts_spec_max = max(CTS_spec.values()) if CTS_spec else 0.0
     coverage_intensity = float(np.clip(
         0.65 * dacs_final_frac + 0.25 * (1.0 - cts_spec_max) + 0.10 * (1.0 - ce_final_norm),
@@ -702,6 +746,40 @@ def dacs_time_series(snap: PlaySnapshot, a_max: float, v_cap: float,
         max(0.0, 0.80 * coverage_intensity),         # incompletion/drop
         max(0.0, 0.20 * coverage_intensity)          # interception
     ], dtype=float)
+    
+    # If outcome model is available, override heuristic probabilities
+    if outcome_model is not None:
+        # Construct result dict for feature extraction (using current values)
+        # We need to construct a partial result dict to feed into feature_vector_from_play
+        # Note: Some features like 'dacs_final' are already computed above.
+        partial_result = {
+            'dacs_final': dacs_final,
+            'peak_collapse_rate': float(np.max(collapse_vals)) if len(collapse_vals) > 0 else 0.0,
+            'time_to_50pct': float(time_to_50pct) if time_to_50pct is not None else 0.0,
+            'ce_final_norm': ce_norm_vals[-1] if len(ce_norm_vals) > 0 else 0.0,
+            'bfoi': bfoi,
+            'coverage_intensity': coverage_intensity,
+            'pursuit_eff_mean': float(np.mean([v for v in pursuit_eff.values() if not math.isnan(v)])) if pursuit_eff else 0.0,
+            'hrt_mean': float(np.mean([v for v in hawk_reaction.values() if not math.isnan(v)])) if hawk_reaction else 0.0,
+            'arrival_mean': float(np.mean([v for v in actual_arrival.values() if not math.isnan(v)])) if actual_arrival else 0.0,
+        }
+        
+        # Heuristics for fallback/feature input if needed (though our current model doesn't use them)
+        heuristics = {
+            'catch': probs[0],
+            'incomplete': probs[1],
+            'interception': probs[2]
+        }
+        
+        feats = feature_vector_from_play(partial_result, heuristics)
+        model_probs = predict_event_probs(outcome_model, feats)
+        
+        probs = np.array([
+            model_probs.get('catch', 0.0),
+            model_probs.get('incomplete', 0.0),
+            model_probs.get('interception', 0.0)
+        ], dtype=float)
+
     total_prob = probs.sum()
     if total_prob > 1e-6:
         probs /= total_prob
@@ -833,7 +911,10 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
                            topk_ps: int = PLAYER_SHARE_TOPK,
                            seed: int = 42,
                            residual_model_path: Optional[str] = None,
-                           use_residual_model: bool = True) -> Tuple[pd.DataFrame, List[str]]:
+                           use_residual_model: bool = True,
+                           outcome_model_path: Optional[str] = None,
+                           use_outcome_model: bool = True,
+                           uncertainty_samples: int = 50) -> Tuple[pd.DataFrame, List[str]]:
     a_max, v_cap = load_calibration(root_dir)
     files = analytics_input_files(root_dir)
     output_files = analytics_output_files(root_dir)
@@ -877,6 +958,18 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
         if residual_model is None:
             print(f"[WARN] Residual model not found at {model_path}; using physics-only reach.")
 
+    outcome_model: Optional[OutcomeModelBundle] = None
+    if use_outcome_model:
+        model_path = outcome_model_path or os.path.join(root_dir, 'analytics', 'models', 'outcome_model.joblib')
+        try:
+            outcome_model = load_outcome_model(model_path)
+            # print(f"Loaded outcome model from {model_path}")
+        except Exception as e:
+            print(f"[WARN] Could not load outcome model from {model_path}: {e}")
+
+
+
+
     for snap in snapshots:
         play_output = outputs_by_play.get(snap.play_id)
         supp_row = supp_lookup.get(snap.play_id)
@@ -888,6 +981,8 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
             baseline_epa_map=baseline_epa_map,
             baseline_epa_default=baseline_epa_default,
             event_epa_map=event_epa_map,
+            outcome_model=outcome_model,
+            uncertainty_samples=uncertainty_samples
         )
 
         # Save per-play JSON
@@ -989,8 +1084,11 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
             'arrival_mean': arrival_mean,
             'arrival_min': arrival_min,
             'pass_result': pass_result_val,
+            'route_of_targeted_receiver': str(supp_row.route_of_targeted_receiver) if supp_row is not None else '',
+            'expected_points_added': float(supp_row.expected_points_added) if supp_row is not None else np.nan,
             'pass_length': pass_length_val,
             'pass_location_type': pass_loc_val,
+            'team_coverage_man_zone': str(supp_row.team_coverage_man_zone) if supp_row is not None else '',
         })
 
         # accumulate timeseries rows
@@ -1009,6 +1107,7 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
                 'dacs_lo': float(dacs_series_lo_list[k-1]) if k-1 < len(dacs_series_lo_list) else float(result['dacs_series'][k-1]),
                 'dacs_hi': float(dacs_series_hi_list[k-1]) if k-1 < len(dacs_series_hi_list) else float(result['dacs_series'][k-1]),
                 'collapse_rate': float(result['collapse_rate_series'][k-1]),
+                'ce_norm': float(coverage_entropy_norm_series[k-1]) if k-1 < len(coverage_entropy_norm_series) else np.nan,
                 'ce_norm': float(coverage_entropy_norm_series[k-1]) if k-1 < len(coverage_entropy_norm_series) else np.nan,
             })
 
@@ -1075,9 +1174,9 @@ def compute_dacs_for_game(root_dir: str, game_id: int, out_dir: str,
 
 def list_games_quick(root_dir: str, limit: int = 50) -> pd.DataFrame:
     """List distinct game_ids quickly using supplementary_data.csv (lighter to load)."""
-    supp = os.path.join(root_dir, 'analytics', 'data', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
+    supp = os.path.join(root_dir, 'analytics', 'data', 'raw', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
     if not os.path.exists(supp):
-        raise FileNotFoundError("supplementary_data.csv not found")
+        raise FileNotFoundError(f"supplementary_data.csv not found at {supp}")
     df = pd.read_csv(supp, usecols=['game_id','play_id'])
     games = df[['game_id']].drop_duplicates()
     games = games.sort_values('game_id').reset_index(drop=True)
@@ -1096,6 +1195,7 @@ def main():
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--residual_model_path', type=str, default=None, help='Path to residual reach model joblib')
     parser.add_argument('--no_residual', action='store_true', help='Disable residual reach corrections')
+    parser.add_argument('--uncertainty_samples', type=int, default=50, help='Number of samples for uncertainty bands')
     parser.add_argument('--list_games', action='store_true', help='List some available game_ids and exit')
     args = parser.parse_args()
 
@@ -1119,6 +1219,7 @@ def main():
         seed=args.seed,
         residual_model_path=args.residual_model_path,
         use_residual_model=(not args.no_residual),
+        uncertainty_samples=args.uncertainty_samples,
     )
 
     print(df_summary.head(10).to_string(index=False))

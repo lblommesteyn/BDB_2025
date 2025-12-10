@@ -1,0 +1,20 @@
+
+def baseline_epa_lookup(root_dir: str) -> pd.Series:
+    """Return baseline EPA by (pass_length, pass_location_type) multi-index."""
+    global _BASELINE_EPA_CACHE, _BASELINE_EPA_MEAN, _EPA_EVENT_MEANS
+    if _BASELINE_EPA_CACHE is not None:
+        return _BASELINE_EPA_CACHE
+    supp_path = os.path.join(root_dir, 'analytics', 'data', 'raw', '114239_nfl_competition_files_published_analytics_final', 'supplementary_data.csv')
+    print(f"DEBUG: Checking baseline EPA path: {supp_path}")
+    if not os.path.exists(supp_path):
+        raise FileNotFoundError(f"supplementary_data.csv not found at {supp_path}")
+    df = pd.read_csv(
+        supp_path,
+        usecols=['pass_length','pass_location_type','expected_points_added','pass_result'],
+        dtype={'pass_length':'category','pass_location_type':'category','expected_points_added':'float32','pass_result':'category'}
+    )
+    grouped = df.groupby(['pass_length','pass_location_type'], observed=True)['expected_points_added'].mean()
+    _BASELINE_EPA_CACHE = grouped
+    _BASELINE_EPA_MEAN = float(df['expected_points_added'].mean())
+    _EPA_EVENT_MEANS = df.groupby('pass_result', observed=True)['expected_points_added'].mean().to_dict()
+    return grouped
