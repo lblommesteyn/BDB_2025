@@ -1,0 +1,567 @@
+Game 2023090700 failed: name 'time_to_50pct' is not defined
+Traceback (most recent call last):
+  File "C:\Users\16476\BDB_2025\analytics\batch_runner.py", line 246, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "C:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 952, in compute_dacs_for_game
+    result = dacs_time_series(
+  File "C:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 735, in dacs_time_series
+    'time_to_50pct': float(time_to_50pct) if time_to_50pct is not None else 0.0,
+NameError: name 'time_to_50pct' is not defined
+Game 2023120309 failed: game_id 2023120309 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023120309 not found in inputs
+Game 2023120310 failed: game_id 2023120310 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023120310 not found in inputs
+Game 2023120400 failed: game_id 2023120400 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023120400 not found in inputs
+Game 2023120700 failed: game_id 2023120700 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023120700 not found in inputs
+Game 2023121000 failed: game_id 2023121000 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121000 not found in inputs
+Game 2023121001 failed: game_id 2023121001 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121001 not found in inputs
+Game 2023121002 failed: game_id 2023121002 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121002 not found in inputs
+Game 2023121003 failed: game_id 2023121003 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121003 not found in inputs
+Game 2023121004 failed: game_id 2023121004 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121004 not found in inputs
+Game 2023121005 failed: game_id 2023121005 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121005 not found in inputs
+Game 2023121006 failed: game_id 2023121006 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121006 not found in inputs
+Game 2023121007 failed: game_id 2023121007 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121007 not found in inputs
+Game 2023121008 failed: game_id 2023121008 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121008 not found in inputs
+Game 2023121009 failed: game_id 2023121009 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121009 not found in inputs
+Game 2023121010 failed: game_id 2023121010 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121010 not found in inputs
+Game 2023121011 failed: game_id 2023121011 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121011 not found in inputs
+Game 2023121100 failed: game_id 2023121100 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121100 not found in inputs
+Game 2023121101 failed: game_id 2023121101 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121101 not found in inputs
+Game 2023121400 failed: game_id 2023121400 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121400 not found in inputs
+Game 2023121600 failed: game_id 2023121600 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121600 not found in inputs
+Game 2023121601 failed: game_id 2023121601 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121601 not found in inputs
+Game 2023121602 failed: game_id 2023121602 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121602 not found in inputs
+Game 2023121700 failed: game_id 2023121700 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121700 not found in inputs
+Game 2023121701 failed: game_id 2023121701 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121701 not found in inputs
+Game 2023121702 failed: game_id 2023121702 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121702 not found in inputs
+Game 2023121703 failed: game_id 2023121703 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121703 not found in inputs
+Game 2023121704 failed: game_id 2023121704 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121704 not found in inputs
+Game 2023121705 failed: game_id 2023121705 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121705 not found in inputs
+Game 2023121706 failed: game_id 2023121706 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121706 not found in inputs
+Game 2023121708 failed: game_id 2023121708 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121708 not found in inputs
+Game 2023121709 failed: game_id 2023121709 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121709 not found in inputs
+Game 2023121710 failed: game_id 2023121710 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121710 not found in inputs
+Game 2023121711 failed: game_id 2023121711 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121711 not found in inputs
+Game 2023121801 failed: game_id 2023121801 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023121801 not found in inputs
+Game 2023122100 failed: game_id 2023122100 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122100 not found in inputs
+Game 2023122300 failed: game_id 2023122300 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122300 not found in inputs
+Game 2023122301 failed: game_id 2023122301 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122301 not found in inputs
+Game 2023122402 failed: game_id 2023122402 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122402 not found in inputs
+Game 2023122403 failed: game_id 2023122403 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122403 not found in inputs
+Game 2023122404 failed: game_id 2023122404 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122404 not found in inputs
+Game 2023122405 failed: game_id 2023122405 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122405 not found in inputs
+Game 2023122406 failed: game_id 2023122406 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122406 not found in inputs
+Game 2023122407 failed: game_id 2023122407 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122407 not found in inputs
+Game 2023122408 failed: game_id 2023122408 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122408 not found in inputs
+Game 2023122409 failed: game_id 2023122409 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122409 not found in inputs
+Game 2023122410 failed: game_id 2023122410 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122410 not found in inputs
+Game 2023122411 failed: game_id 2023122411 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122411 not found in inputs
+Game 2023122500 failed: game_id 2023122500 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122500 not found in inputs
+Game 2023122501 failed: game_id 2023122501 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122501 not found in inputs
+Game 2023122502 failed: game_id 2023122502 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122502 not found in inputs
+Game 2023122800 failed: game_id 2023122800 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023122800 not found in inputs
+Game 2023123000 failed: game_id 2023123000 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123000 not found in inputs
+Game 2023123101 failed: game_id 2023123101 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123101 not found in inputs
+Game 2023123102 failed: game_id 2023123102 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123102 not found in inputs
+Game 2023123103 failed: game_id 2023123103 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123103 not found in inputs
+Game 2023123104 failed: game_id 2023123104 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123104 not found in inputs
+Game 2023123105 failed: game_id 2023123105 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123105 not found in inputs
+Game 2023123106 failed: game_id 2023123106 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123106 not found in inputs
+Game 2023123107 failed: game_id 2023123107 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123107 not found in inputs
+Game 2023123108 failed: game_id 2023123108 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123108 not found in inputs
+Game 2023123109 failed: game_id 2023123109 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123109 not found in inputs
+Game 2023123110 failed: game_id 2023123110 not found in inputs
+Traceback (most recent call last):
+  File "c:\Users\16476\BDB_2025\analytics\batch_runner.py", line 254, in main
+    df_summary, json_paths = compute_dacs_for_game(
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 921, in compute_dacs_for_game
+    df_game = load_game_rows(files, game_id)
+  File "c:\Users\16476\BDB_2025\analytics\dacs_one_game.py", line 189, in load_game_rows
+    raise ValueError(f"game_id {game_id} not found in inputs")
+ValueError: game_id 2023123110 not found in inputs
